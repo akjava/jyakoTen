@@ -1,0 +1,231 @@
+import pyopenjtalk
+import difflib
+import os
+import argparse
+
+from tts_utils import mora_utils,mecab_utils
+
+# arg parser
+parser = argparse.ArgumentParser(description='Score result')
+parser.add_argument('--transcript_path',"-tp" ,
+                    help='correct text path')
+parser.add_argument('--transcript_index', "-ti",
+                    help='1 for kana',default=1,type=int)
+parser.add_argument('--transcript_splitter',"-ts" ,
+                    help='split text',default=":")
+
+parser.add_argument('--min_score' ,
+                    help='print minscore',type = float, default=0)
+
+parser.add_argument('--recognition_path', "-rp",
+                    help='correct text path')
+parser.add_argument('--recognition_index', "-ri",
+                    help='0 means flat',default=0,type=int)
+parser.add_argument('--recognition_splitter',"-rs" ,
+                    help='split text',default="|")
+
+parser.add_argument('--key1', 
+                    help='key1 cv01 or ita01..')
+parser.add_argument('--key2', 
+                    help='key2 epoch number or voice changed  cv02',default='0000')
+
+parser.add_argument('--key3', 
+                    help='key3 recitation or emotion or endsville400',default='recitation')
+parser.add_argument('--key4', 
+                    help='optional int or float')
+parser.add_argument('--no_mecab', 
+                    help='not use mecab',action='store_false')
+
+
+args = parser.parse_args()
+key1 = args.key1
+key2 = args.key2
+key3 = args.key3
+key4 = args.key4
+use_mecab = args.no_mecab
+
+transcript_path = args.transcript_path
+transcript_index = args.transcript_index
+transcript_splitter = args.transcript_splitter
+
+recognition_path = args.recognition_path
+recognition_index = args.recognition_index
+recognition_splitter = args.recognition_splitter
+
+min_score = args.min_score
+
+# 引数の確認
+if args.recognition_path is None and args.key1 is None:
+    print("Error: At least one of --recognition_path or --key1 must be specified.")
+    parser.print_help() # ヘルプメッセージを表示
+    exit(1) # スクリプトの実行を終了
+
+
+def replace_chars(line):
+    line = line.replace("\n","")
+    line = line.replace("、","")
+    line = line.replace("?","")
+    line = line.replace("!","")
+    line = line.replace("。","")
+    line = line.replace("？","")
+    line = line.replace("！","")
+    return line
+
+current_dir=os.path.dirname(__file__)
+pyopenjtalk.mecab_dict_index(current_dir+"/"+"user.csv", "user.dic")
+pyopenjtalk.update_global_jtalk_with_user_dict("user.dic")
+
+def detect_success_fail_words(word1,word2):
+    d = difflib.Differ()
+    diff = d.compare(word1, word2)
+    success = []
+    faild = []
+    for line in diff:
+        split = line.split(" ")
+        if  split[0] == "":
+            success.append(split[2])
+        else:
+            if split[0] == "+":
+                faild.append(split[1])
+        #print(f"result = '{line}'")
+    return " ".join(success)," ".join(faild)
+
+emotion_path = "emotion_transcript_utf8.txt"
+emotion_path = current_dir+"/"+f"{key3}_transcript_utf8.txt"
+#print(emotion_path)
+#print(transcript_path)
+if transcript_path:
+    print(f"use transcript:{transcript_path} index = {transcript_index}")
+    emotion_path = transcript_path
+emotion_kanas = []
+with open(emotion_path) as f:
+        lines = f.readlines()
+        for line in lines:
+            line = line.replace("\n","")
+            if line == "":
+                  continue
+            id,kanji_kana = line.split(transcript_splitter)
+            kanji_kana = kanji_kana.split(",")
+            kana = kanji_kana[transcript_index]
+            kana = replace_chars(kana)
+            emotion_kanas.append(kana)
+
+
+option_key=""
+if key4!= None:
+     option_key="_"+key4
+    
+
+
+file_path = f"{key1}_{key2}_{key3}_result{option_key}.txt"
+#file_path = "ita04_recitation_result.txt"
+if recognition_path:
+     file_path = recognition_path
+
+
+
+
+index = 0
+out = []
+lows = []
+total_score = 0
+low_text = ""
+low_score = 1
+case2 = 0
+case3 = 0
+with open(file_path) as f:
+        lines = f.readlines()
+        for line in lines:
+            #print(line)
+            values = line.split(recognition_splitter)
+            line = values[recognition_index]
+            line = replace_chars(line)
+            line.replace(" ","")
+            # TODO lower case and external file,this for ita 
+            line= line.replace("DISCUSSION","ディスカッション")
+            line= line.replace("Discussion","ディスカッション")
+            line= line.replace("Revolution","レヴォリューション")
+            line= line.replace("Regulation","レギュレーション")
+            line= line.replace("Education","エデュケーション")
+            line= line.replace("50-50","フィフティーフィフティー")
+            line= line.replace("720","セブントゥウェンティ")
+            line= line.replace("7-20","セブントゥウェンティ")
+            line= line.replace("360","スリーシックスティ")
+            line = line.replace("SegmentationFault","セグメンテーションフォルト")
+            line = line.replace("Segmentation Fault","セグメンテーションフォルト")
+            line = line.replace("隕族","インゾク")
+            
+            
+
+            kana = emotion_kanas[index]
+            phones2 = pyopenjtalk.g2p(kana, kana=False)
+            moras2 = mora_utils.phonemes_to_mora(phones2,True)
+
+            #kanji_kana = kanji_kana.replace("虐","ギャク")
+            #kanji_kana = kanji_kana.replace("衰","スイ")
+            #kanji_kana = kanji_kana.replace("屈","クツ")
+            
+            
+            high_score,high_score_text,high_moras = mecab_utils.get_best_group(line,kana)
+            high_score2,high_score_text2,high_moras2 = mecab_utils.get_best_group(line,kana,False)
+            if high_score2 > high_score:
+                 high_score = high_score2
+                 high_score_text = high_score_text2
+                 high_moras = high_moras2
+                 case2+=1
+            high_score3,high_score_text3,high_moras3 = mecab_utils.get_best_group(line,kana,True,False)
+            if high_score3 > high_score:
+                 is_case2 = high_score == high_score2
+                 high_score = high_score3
+                 high_score_text = high_score_text3
+                 high_moras = high_moras3
+                 case3+=1
+                 if is_case2:
+                      case3-=1
+            
+
+            score = high_score
+            #line = high_score_text
+           
+            #moras1 = " ".join(moras1)
+            #moras1 = moras1.replace(",","")
+            
+            #moras2 = " ".join(moras2)
+            #moras2 = moras2.replace(",","")
+
+            
+            if score <low_score:
+                 low_score = score
+                 low_text = line+"/"+high_score_text
+                 low_correct = kana
+                 low_id = index
+
+            sucdess, faild = detect_success_fail_words(high_moras, moras2)
+            
+            # convert readable text
+            moras1 = " ".join(high_moras)
+            moras2 = " ".join(moras2)
+
+            result = f"{index+1:03d},{score},{faild},{sucdess},{line},{high_score_text},{kana},{moras1},{moras2}\n"
+            out.append(result)
+            if score < min_score:
+                 lows.append(result)
+            total_score += score
+            #print(f"{index} {score} {total_score}")
+            index += 1
+            #break
+            #if index == 100:
+            #      break
+max_score = index
+print(f"{key1} {key2} Total:{total_score}")
+print(f"Lowest:{low_id} {low_score}:{low_text} = {low_correct}")
+print(f"no mecab:{case2},no group:{case3}")
+score = total_score
+for low in lows:
+     print(low)
+
+if not use_mecab:
+     option_key +="_no-mecab"
+
+with open(f"{key1}_{key2}_{key3}_score({score:.3f} of {max_score}){option_key}.txt", 'w') as f:
+    f.writelines(out)
