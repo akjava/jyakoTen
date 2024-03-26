@@ -35,6 +35,8 @@ parser.add_argument('--key4',
                     help='optional int or float')
 parser.add_argument('--no_mecab', 
                     help='not use mecab',action='store_false')
+parser.add_argument('--use_mora', 
+                    help='calcurate mora base',action='store_true')
 
 
 args = parser.parse_args()
@@ -90,8 +92,8 @@ def detect_success_fail_words(word1,word2):
         #print(f"result = '{line}'")
     return " ".join(success)," ".join(faild)
 
-emotion_path = "emotion_transcript_utf8.txt"
-emotion_path = current_dir+"/"+f"{key3}_transcript_utf8.txt"
+emotion_path = "transcripts/emotion_transcript_utf8.txt"
+emotion_path = current_dir+"/transcripts/"+f"{key3}_transcript_utf8.txt"
 #print(emotion_path)
 #print(transcript_path)
 if transcript_path:
@@ -166,14 +168,14 @@ with open(file_path) as f:
             #kanji_kana = kanji_kana.replace("屈","クツ")
             
             
-            high_score,high_score_text,high_moras = mecab_utils.get_best_group(line,kana)
-            high_score2,high_score_text2,high_moras2 = mecab_utils.get_best_group(line,kana,False)
+            high_score,high_score_text,high_moras = mecab_utils.get_best_group(line,kana,True,args.use_mora)
+            high_score2,high_score_text2,high_moras2 = mecab_utils.get_best_group(line,kana,False,True,args.use_mora)
             if high_score2 > high_score:
                  high_score = high_score2
                  high_score_text = high_score_text2
                  high_moras = high_moras2
                  case2+=1
-            high_score3,high_score_text3,high_moras3 = mecab_utils.get_best_group(line,kana,True,False)
+            high_score3,high_score_text3,high_moras3 = mecab_utils.get_best_group(line,kana,True,False,args.use_mora)
             if high_score3 > high_score:
                  is_case2 = high_score == high_score2
                  high_score = high_score3
@@ -226,6 +228,9 @@ for low in lows:
 
 if not use_mecab:
      option_key +="_no-mecab"
+
+if args.use_mora:
+     option_key +="_use-mora"
 
 with open(f"{key1}_{key2}_{key3}_score({score:.3f} of {max_score}){option_key}.txt", 'w') as f:
     f.writelines(out)
