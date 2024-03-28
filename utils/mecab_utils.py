@@ -4,6 +4,11 @@ import difflib
 from tts_utils import mora_utils,kanji_split
 # MeCabのインスタンスを作成
 
+# default design for unidic_lite
+mecab = MeCab.Tagger()
+dic_split ="\t" #, if unidic
+dic_index = 1 # 9 unidic
+
 
 
 def is_unidic_lite():
@@ -19,7 +24,8 @@ def get_unidic_lite_arg():
     path = path.replace("\\","/")
     return f"-r {path}/dicdir/mecabrc -d {path}/dicdir"
 
-def set_up_mecab(args,split="\t",index=9):
+def set_up_mecab(args,split=",",index=9):
+    print(f"mecab utils set mecab dic(unidic) to {args} split='{split}' index={index}")
     global mecab
     mecab = MeCab.Tagger(args)
     global dic_split
@@ -27,10 +33,7 @@ def set_up_mecab(args,split="\t",index=9):
     dic_split = split #, if unidic
     dic_index = index # 9 unidic
 
-# default design for unidic_lite
-mecab = MeCab.Tagger()
-dic_split ="\t" #, if unidic
-dic_index = 1 # 9 unidic
+
 
 def extract_unique_kanas(kanji,nbest_size=512):
     uniq_kanas = set()
@@ -55,7 +58,7 @@ def extract_unique_kanas(kanji,nbest_size=512):
             #print(data[9])
             kana+=data[dic_index]
         else:
-            kana+=data[0].split("\t")[0]
+            kana+=data[0].split(dic_split)[0]
             
             #print(data[9])
     return list(uniq_kanas)

@@ -3,7 +3,7 @@ import difflib
 import os
 import argparse
 
-from utils import mora_utils,mecab_utils
+from utils import mora_utils,mecab_utils,alkana_utils
 
 # arg parser
 parser = argparse.ArgumentParser(description='Score result')
@@ -56,6 +56,9 @@ recognition_splitter = args.recognition_splitter
 
 min_score = args.min_score
 
+# use openjtalk dic and replace text
+use_user_dic = False
+
 # 引数の確認
 if args.recognition_path is None and args.key1 is None:
     print("Error: At least one of --recognition_path or --key1 must be specified.")
@@ -74,8 +77,10 @@ def replace_chars(line):
     return line
 
 current_dir=os.path.dirname(__file__)
-pyopenjtalk.mecab_dict_index(current_dir+"/"+"user.csv", "user.dic")
-pyopenjtalk.update_global_jtalk_with_user_dict("user.dic")
+
+if use_user_dic:
+     pyopenjtalk.mecab_dict_index(current_dir+"/"+"user.csv", "user.dic")
+     pyopenjtalk.update_global_jtalk_with_user_dict("user.dic")
 
 def detect_success_fail_words(word1,word2):
     d = difflib.Differ()
@@ -135,6 +140,11 @@ low_text = ""
 low_score = 1
 case2 = 0
 case3 = 0
+
+# best dic
+mecab_utils.set_up_mecab("-d D:/models/dictionary/unidic-csj-202302/ -r D:/models/dictionary/unidic-csj-202302/mecabrc")
+#print(mecab_utils.mecab.parse("hello"))
+
 with open(file_path) as f:
         lines = f.readlines()
         for line in lines:
@@ -142,27 +152,41 @@ with open(file_path) as f:
             values = line.split(recognition_splitter)
             line = values[recognition_index]
             line = replace_chars(line)
-            line.replace(" ","")
-            # TODO lower case and external file,this for ita 
-            line= line.replace("DISCUSSION","ディスカッション")
-            line= line.replace("Discussion","ディスカッション")
-            line= line.replace("Revolution","レヴォリューション")
-            line= line.replace("Regulation","レギュレーション")
-            line= line.replace("Education","エデュケーション")
+            #line = line.replace(" ","")
+
+            converted_dic=alkana_utils.convert_alphabet_to_kana(line)
+            
+            if line != converted_dic["text"]:
+                 print(f"English-Converted {line} to {converted_dic['text']}")
+                 line = converted_dic["text"]
+            else:
+                 if converted_dic["no_alakana_words"]:
+                      print(f"faild or skipped {converted_dic['no_alakana_words']}")
+
+            # TODO lower case and external file,this for ita
+            #  
             line= line.replace("50-50","フィフティーフィフティー")
-            line= line.replace("720","セブントゥウェンティ")
-            line= line.replace("7-20","セブントゥウェンティ")
-            line= line.replace("360","スリーシックスティ")
-            line = line.replace("SegmentationFault","セグメンテーションフォルト")
-            line = line.replace("Segmentation Fault","セグメンテーションフォルト")
-            line = line.replace("隕族","インゾク")
+            if use_user_dic:
+               #line= line.replace("DISCUSSION","ディスカッション")
+               #line= line.replace("Discussion","ディスカッション")
+               #line= line.replace("Revolution","レヴォリューション")
+               #line= line.replace("Regulation","レギュレーション")
+               #line= line.replace("Education","エデュケーション")
+               line= line.replace("50-50","フィフティーフィフティー")
+               line= line.replace("720","セブントゥウェンティ")
+               line= line.replace("7-20","セブントゥウェンティ")
+               line= line.replace("360","スリーシックスティ")
+               #line = line.replace("SegmentationFault","セグメンテーションフォルト")
+               #line = line.replace("Segmentation Fault","セグメンテーションフォルト")
+               line = line.replace("隕族","インゾク")
             
             
 
             kana = emotion_kanas[index]
             phones2 = pyopenjtalk.g2p(kana, kana=False)
             moras2 = mora_utils.phonemes_to_mora(phones2,True)
-
+            
+            # TODO found
             #kanji_kana = kanji_kana.replace("虐","ギャク")
             #kanji_kana = kanji_kana.replace("衰","スイ")
             #kanji_kana = kanji_kana.replace("屈","クツ")
