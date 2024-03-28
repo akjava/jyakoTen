@@ -17,7 +17,7 @@ group.add_argument('--audio_file_list', type=str, help='Name list of the audio f
 
 parser.add_argument('--audio_list_dir', type=str, help='If exist combine audio_list_dir/audio_file_list',default = "")
 
-parser.add_argument('--out', 
+parser.add_argument('--out_path',"-o", 
                     help='outputpath')
 parser.add_argument('--add_audio_path', 
                     help='output has audio path',action='store_true') #type bool is broken
@@ -47,7 +47,7 @@ use_vad = args.no_vad
 cpu = args.cpu
 
 lang = args.lang
-out = args.out
+
 beam = args.beam
 
 print(args)
@@ -79,21 +79,12 @@ else:
 
 def whisper_transcribe(audio_path):
     segments, info = model.transcribe(audio_path, language=lang,beam_size=beam,vad_filter=use_vad,without_timestamps=True,word_timestamps=False)
-    #print("Detected language '%s' with probability %f" % (info.language, info.language_probability))
     texts = []
     for segment in segments:
         texts.append(segment.text)
 
     return '\n'.join(texts)
 
-
-def run_script(audio_path):
-    """指定されたターゲットディレクトリでスクリプトを実行します。"""
-    try:
-        result = transcribe(audio_path)
-    except RuntimeError as e:
-        print(f"{audio_path} のスクリプト実行中にエラーが発生しました: {e}")
-    return result
 
 
     
@@ -116,19 +107,10 @@ def transcribe(path):
 
 
 output_lines =[]
-def thread_execute(run_script,arg1,max_workers=1):
-    global out 
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = [executor.submit(run_script, audio_path) for audio_path in arg1]
-
-        for future in as_completed(futures):
-            try:
-                output_lines.append(future.result())
-            except Exception as e:
-                print(e)
-    if not out:
-        out = f"fw_batch_result_{args.compute_type}.txt"
-    with open(out, 'w') as f:
+def write_result(out_path):
+    if not out_path:
+        out_path = f"fw_batch_result_{args.compute_type}.txt"
+    with open(out_path, 'w') as f:
         f.writelines(output_lines)
 
 
@@ -144,7 +126,10 @@ if __name__ == "__main__":
                 if args.audio_file_dir:
                     filename = args.audio_file_dir+"/"+filename
                 audios_paths.append(filename)
-            thread_execute(run_script,audios_paths)
+            for audio_path in audios_paths:
+                result = transcribe(audio_path)
+                output_lines.append(result)
+                write_result(args.out_path)
                
     else:
         filenames = os.listdir(audio_dir)
@@ -153,7 +138,10 @@ if __name__ == "__main__":
             if filename.endswith(".wav") or filename.endswith(".mp3"):
                 filename = audio_dir+"/"+filename
                 audios_paths.append(filename)
-        thread_execute(run_script,audios_paths)
+            for audio_path in audios_paths:
+                result = transcribe(audio_path)
+                output_lines.append(result)
+                write_result(args.out_path)
 
 
 

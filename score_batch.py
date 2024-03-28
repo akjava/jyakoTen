@@ -3,7 +3,7 @@ import difflib
 import os
 import argparse
 
-from tts_utils import mora_utils,mecab_utils
+from utils import mora_utils,mecab_utils
 
 # arg parser
 parser = argparse.ArgumentParser(description='Score result')
