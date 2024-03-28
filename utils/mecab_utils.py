@@ -58,7 +58,7 @@ def extract_unique_kanas(kanji,nbest_size=512):
             #print(data[9])
             kana+=data[dic_index]
         else:
-            kana+=data[0].split(dic_split)[0]
+            kana+=data[0].split("\t")[0] #unidic index 0 has tab-separated 
             
             #print(data[9])
     return list(uniq_kanas)

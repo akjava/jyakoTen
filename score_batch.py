@@ -164,7 +164,11 @@ with open(file_path) as f:
                       print(f"faild or skipped {converted_dic['no_alakana_words']}")
 
             # TODO lower case and external file,this for ita
-            #  
+            
+            # recitation 324  
+            if key3 == "recitation":
+                 line = line.replace("1877","センハッピャクナナジュウナナ")
+
             line= line.replace("50-50","フィフティーフィフティー")
             if use_user_dic:
                #line= line.replace("DISCUSSION","ディスカッション")
@@ -178,7 +182,7 @@ with open(file_path) as f:
                line= line.replace("360","スリーシックスティ")
                #line = line.replace("SegmentationFault","セグメンテーションフォルト")
                #line = line.replace("Segmentation Fault","セグメンテーションフォルト")
-               line = line.replace("隕族","インゾク")
+               #line = line.replace("隕族","インゾク")
             
             
 
