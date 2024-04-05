@@ -141,9 +141,6 @@ low_score = 1
 case2 = 0
 case3 = 0
 
-# best dic
-mecab_utils.set_up_mecab("-d D:/models/dictionary/unidic-csj-202302/ -r D:/models/dictionary/unidic-csj-202302/mecabrc")
-#print(mecab_utils.mecab.parse("hello"))
 
 with open(file_path) as f:
         lines = f.readlines()
