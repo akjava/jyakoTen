@@ -162,35 +162,23 @@ with open(file_path) as f:
 
             # TODO lower case and external file,this for ita
             
+            # TODO separate dic
             # recitation 324  
             if key3 == "recitation":
                  line = line.replace("1877","センハッピャクナナジュウナナ")
 
             line= line.replace("50-50","フィフティーフィフティー")
             if use_user_dic:
-               #line= line.replace("DISCUSSION","ディスカッション")
-               #line= line.replace("Discussion","ディスカッション")
-               #line= line.replace("Revolution","レヴォリューション")
-               #line= line.replace("Regulation","レギュレーション")
-               #line= line.replace("Education","エデュケーション")
                line= line.replace("50-50","フィフティーフィフティー")
                line= line.replace("720","セブントゥウェンティ")
                line= line.replace("7-20","セブントゥウェンティ")
                line= line.replace("360","スリーシックスティ")
-               #line = line.replace("SegmentationFault","セグメンテーションフォルト")
-               #line = line.replace("Segmentation Fault","セグメンテーションフォルト")
-               #line = line.replace("隕族","インゾク")
             
             
 
             kana = emotion_kanas[index]
             phones2 = pyopenjtalk.g2p(kana, kana=False)
             moras2 = mora_utils.phonemes_to_mora(phones2,True)
-            
-            # TODO found
-            #kanji_kana = kanji_kana.replace("虐","ギャク")
-            #kanji_kana = kanji_kana.replace("衰","スイ")
-            #kanji_kana = kanji_kana.replace("屈","クツ")
             
             
             high_score,high_score_text,high_moras = mecab_utils.get_best_group(line,kana,True,args.use_mora)
@@ -212,13 +200,6 @@ with open(file_path) as f:
             
 
             score = high_score
-            #line = high_score_text
-           
-            #moras1 = " ".join(moras1)
-            #moras1 = moras1.replace(",","")
-            
-            #moras2 = " ".join(moras2)
-            #moras2 = moras2.replace(",","")
 
             
             if score <low_score:
@@ -238,15 +219,14 @@ with open(file_path) as f:
             if score < min_score:
                  lows.append(result)
             total_score += score
-            #print(f"{index} {score} {total_score}")
+            
             index += 1
-            #break
-            #if index == 100:
-            #      break
+            
 max_score = index
 print(f"{key1} {key2} Total:{total_score}")
 print(f"Lowest:{low_id} {low_score}:{low_text} = {low_correct}")
-print(f"no mecab:{case2},no group:{case3}")
+# TODO add verbose mode
+#print(f"no mecab:{case2},no group:{case3}")
 score = total_score
 for low in lows:
      print(low)
