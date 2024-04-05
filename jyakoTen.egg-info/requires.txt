@@ -1,0 +1,4 @@
+pyopenjtalk
+alkana
+mecab-python3
+unidic_lite

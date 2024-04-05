@@ -1,0 +1,9 @@
+LICENSE
+README.md
+pyproject.toml
+score_batch.py
+jyakoTen.egg-info/PKG-INFO
+jyakoTen.egg-info/SOURCES.txt
+jyakoTen.egg-info/dependency_links.txt
+jyakoTen.egg-info/requires.txt
+jyakoTen.egg-info/top_level.txt
