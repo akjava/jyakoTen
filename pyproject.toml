@@ -11,3 +11,5 @@ dependencies =[
 "mecab-python3",
 "unidic_lite",
 ]
+[tool.setuptools]
+py-modules = ["utils"]
