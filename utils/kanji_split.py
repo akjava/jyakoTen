@@ -8,8 +8,7 @@ katakana_range = '[\u30A1-\u30FF]+'
 # 正規表現パターンを作成
 pattern = re.compile(f'{hiragana_range}|{katakana_range}')
 
-# テキストをチェック
-#text = 'あ平成19年からポンチは下界向け虫出した'
+
 
 def split_kanji_dic(text):
     text_groups = []
