@@ -1,2 +1,2 @@
-# __init__.py
 from .score import *
+score_main()
