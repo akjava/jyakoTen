@@ -145,12 +145,11 @@ case3 = 0
 with open(file_path) as f:
         lines = f.readlines()
         for line in lines:
-            #print(line)
+            
             values = line.split(recognition_splitter)
             line = values[recognition_index]
             line = replace_chars(line)
-            #line = line.replace(" ","")
-
+            
             converted_dic=alkana_utils.convert_alphabet_to_kana(line)
             
             if line != converted_dic["text"]:
@@ -158,10 +157,8 @@ with open(file_path) as f:
                  line = converted_dic["text"]
             else:
                  if converted_dic["no_alakana_words"]:
-                      print(f"faild or skipped {converted_dic['no_alakana_words']}")
+                      print(f"Converting English to Kan faild(no in dictionary) or skipped(short words) {converted_dic['no_alakana_words']}.most of case pronounce english is too bad.should add dictionary the wordss")
 
-            # TODO lower case and external file,this for ita
-            
             # TODO separate dic
             # recitation 324  
             if key3 == "recitation":
