@@ -1,4 +1,7 @@
 # JyakoTen
+## how to install
+pip install jyakoTen
+
 ## What is this
 JyakoTen is Japanese Text recognized by Whisper or FasterWhisper
 
