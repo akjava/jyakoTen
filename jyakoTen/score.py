@@ -52,6 +52,9 @@ def score_main():
      parser.add_argument('--recognition_splitter',"-rs" ,
                          help='split text',default="|")
 
+     parser.add_argument('--key_dir', 
+                         help='file exist dir')
+     
      parser.add_argument('--key1', 
                          help='key1 cv01 or ita01..')
      parser.add_argument('--key2', 
@@ -130,8 +133,14 @@ def score_main():
 
 
      file_path = f"{key1}_{key2}_{key3}_result{option_key}.txt"
+     if args.key_dir!= None:
+          file_path = os.path.join(args.key_dir,file_path)
+     else:
+          file_path = os.path.join(os.getcwd(),file_path) 
+          
      
      if recognition_path:
+          print(f"file path({file_path}) replaced recognition_path({recognition_path})")
           file_path = recognition_path
 
 
@@ -239,5 +248,8 @@ def score_main():
      if args.use_mora:
           option_key +="_use-mora"
 
-     with open(f"{key1}_{key2}_{key3}_score({score:.3f} of {max_score}){option_key}.txt", 'w') as f:
+     output_file_name = f"{key1}_{key2}_{key3}_score({score:.3f} of {max_score}){option_key}.txt"
+     output_path = os.path.join(os.getcwd(),output_file_name) 
+
+     with open(output_path, 'w') as f:
           f.writelines(out)
