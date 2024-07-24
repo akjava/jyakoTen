@@ -1,6 +1,8 @@
 import MeCab
 import pyopenjtalk
 import difflib
+from nltk.metrics.distance import edit_distance
+
 from . import mora_utils,kanji_split
 # MeCabのインスタンスを作成
 
@@ -86,6 +88,10 @@ def get_best_text(header,text,correct,use_mecab=True,convert_mora=True):
                     # anyway need strip space to correct match
         matcher = difflib.SequenceMatcher(None, moras1, moras2)
         current_score = matcher.ratio()
+        mora2_joined = " ".join(moras2)
+        d = edit_distance(" ".join(moras1),mora2_joined )
+        current_score = 1.0 - max(1.0, d / len(mora2_joined))
+       
         if current_score >high_score:
             high_score = current_score
             high_text = kana
