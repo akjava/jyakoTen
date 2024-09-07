@@ -83,11 +83,7 @@ def get_best_text(header,text,correct,use_mecab=True,convert_mora=True):
     for kana in kanas:
         phones1 = pyopenjtalk.g2p(header+kana, kana=False)
         moras1 = mora_utils.phonemes_to_mora(phones1,True,convert_mora)
-        #moras1 = phones1.split(" ")
-                    # moras are list not contain spaces.If you compare directly text ratio would be much higher because of the text contain space-character and it match as same effect ratio
-                    # anyway need strip space to correct match
-        matcher = difflib.SequenceMatcher(None, moras1, moras2)
-        current_score = matcher.ratio()
+       
         mora2_joined = " ".join(moras2)
         d = edit_distance(" ".join(moras1),mora2_joined )
         current_score = 1.0 - max(1.0, d / len(mora2_joined))
