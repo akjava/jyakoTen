@@ -4,7 +4,7 @@ import difflib
 from nltk.metrics.distance import edit_distance
 
 from . import mora_utils,kanji_split
-# MeCabのインスタンスを作成
+# Create Mecab instance
 
 # default design for unidic_lite
 mecab = MeCab.Tagger()
@@ -39,7 +39,7 @@ def set_up_mecab(args,split=",",index=9):
 
 def extract_unique_kanas(kanji,nbest_size=512):
     uniq_kanas = set()
-    # パースして単語を分割
+    # parse and split wordss
     words = mecab.parseNBest(nbest_size,kanji)
     #print(words)
     kana = ""

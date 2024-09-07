@@ -90,11 +90,11 @@ def score_main():
      # use openjtalk dic and replace text
      use_user_dic = False
 
-     # 引数の確認
+     # check args
      if args.recognition_path is None and args.key1 is None:
           print("Error: At least one of --recognition_path or --key1 must be specified.")
-          parser.print_help() # ヘルプメッセージを表示
-          exit(1) # スクリプトの実行を終了
+          parser.print_help() 
+          exit(1) 
 
 
 
