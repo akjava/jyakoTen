@@ -192,7 +192,7 @@ def score_main():
                moras2 = mora_utils.phonemes_to_mora(phones2,True)
                
                
-               high_score,high_score_text,high_moras = mecab_utils.get_best_group(line,kana,True,args.use_mora)
+               high_score,high_score_text,high_moras = mecab_utils.get_best_group(line,kana,True,True,args.use_mora)
                high_score2,high_score_text2,high_moras2 = mecab_utils.get_best_group(line,kana,False,True,args.use_mora)
                if high_score2 > high_score:
                     high_score = high_score2
