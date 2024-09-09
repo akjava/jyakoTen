@@ -95,13 +95,20 @@ def convert_to_two_character(moras):
             result.append(one_char+last_char)
     return result
 
-
+def get_cer(transcript, detect):
+    if detect == "":
+        return 0
+    d = edit_distance(transcript, detect)
+    cer = float(d) / max(len(transcript), len(detect))  
+    return cer
 
     return result
 def get_best_text(header,text,correct,use_mecab=True,convert_mora=True):
     phones2 = pyopenjtalk.g2p(correct, kana=False)
     moras2 = mora_utils.phonemes_to_mora(phones2,True,convert_mora)
     #moras2 = phones2.split(" ")
+
+    
 
     #print(kanas)
     high_score = 0
@@ -115,10 +122,17 @@ def get_best_text(header,text,correct,use_mecab=True,convert_mora=True):
     for kana in kanas:
         phones1 = pyopenjtalk.g2p(header+kana, kana=False)
         moras1 = mora_utils.phonemes_to_mora(phones1,True,convert_mora)
+
+        #print(header+kana,phones1)
        
-        mora2_joined = " ".join(moras2)
-        d = edit_distance(" ".join(moras1),mora2_joined )
-        current_score = 1.0 - max(1.0, d / len(mora2_joined))
+        #oh my slow
+        #mora2_joined = " ".join(moras2)
+        #d = edit_distance(" ".join(moras1),mora2_joined )
+        #current_score = 1.0 - max(0, d / len(mora2_joined))
+        
+        matcher = difflib.SequenceMatcher(None, moras1, moras2)
+        current_score = matcher.ratio()
+
        
         if current_score >high_score:
             high_score = current_score

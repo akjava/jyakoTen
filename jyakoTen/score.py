@@ -39,6 +39,9 @@ def score_main():
                          help='correct text path')
      parser.add_argument('--transcript_index', "-ti",
                          help='1 for kana',default=1,type=int)
+     # TODO support
+     #parser.add_argument('--use_transcript_kanji', help='is transcript are kanji',action='store_true')
+     
      parser.add_argument('--transcript_splitter',"-ts" ,
                          help='split text',default=":")
 
@@ -68,6 +71,7 @@ def score_main():
                          help='not use mecab',action='store_false')
      parser.add_argument('--use_mora', 
                          help='calcurate mora base',action='store_true')
+
 
 
      args = parser.parse_args()
@@ -112,6 +116,8 @@ def score_main():
      if transcript_path:
           print(f"use transcript:{transcript_path} index = {transcript_index}")
           emotion_path = transcript_path
+
+     #transcript_kanjis = [] # TODO support kanji?
      emotion_kanas = []
      with open(emotion_path) as f:
           lines = f.readlines()
@@ -124,6 +130,7 @@ def score_main():
                kana = kanji_kana[transcript_index]
                kana = replace_chars(kana)
                emotion_kanas.append(kana)
+               #transcript_kanjis.append()
 
 
      option_key=""
@@ -148,13 +155,14 @@ def score_main():
 
      index = 0
      out = []
+     out.append(",".join(["index","cer","jyakoten01","transcript_text","detected_text","detected_kana","transcript_phonome","detected_phonome","success_phonome","faild_phonome"])+"\n")
      lows = []
      total_score = 0
      low_text = ""
      low_score = 1
      case2 = 0
      case3 = 0
-
+     total_cer =0
 
      with open(file_path) as f:
           lines = f.readlines()
@@ -186,11 +194,15 @@ def score_main():
                     line= line.replace("360","スリーシックスティ")
                
                
+               
 
                kana = emotion_kanas[index]
                phones2 = pyopenjtalk.g2p(kana, kana=False)
                moras2 = mora_utils.phonemes_to_mora(phones2,True)
-               
+
+               detect_kana = pyopenjtalk.g2p(line, kana=True)
+               cer = mecab_utils.get_cer(kana,detect_kana)
+               total_cer += cer
                
                high_score,high_score_text,high_moras = mecab_utils.get_best_group(line,kana,True,True,args.use_mora)
                high_score2,high_score_text2,high_moras2 = mecab_utils.get_best_group(line,kana,False,True,args.use_mora)
@@ -225,7 +237,7 @@ def score_main():
                moras1 = " ".join(high_moras)
                moras2 = " ".join(moras2)
 
-               result = f"{index+1:03d},{score},{faild},{sucdess},{line},{high_score_text},{kana},{moras1},{moras2}\n"
+               result = f"{index+1:03d},{cer:.3f},{score:.3f},{kana},{line},{high_score_text},{moras2},{moras1},{sucdess},{faild}\n"
                out.append(result)
                if score < min_score:
                     lows.append(result)
@@ -248,7 +260,8 @@ def score_main():
      if args.use_mora:
           option_key +="_use-mora"
 
-     output_file_name = f"{key1}_{key2}_{key3}_score({score:.3f} of {max_score}){option_key}.txt"
+     average_cer=total_cer/(index+1)
+     output_file_name = f"{key1}_{key2}_{key3}_cer-{average_cer:.3f}_score({score:.3f} of {max_score}){option_key}.txt"
      output_path = os.path.join(os.getcwd(),output_file_name) 
 
      with open(output_path, 'w') as f:
