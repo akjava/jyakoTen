@@ -58,7 +58,13 @@ def extract_unique_kanas(kanji,nbest_size=512):
        
         if len(data)>dic_index:
             #print(data[9])
-            kana+=data[dic_index]
+            yomi = data[dic_index].strip()
+            raw = data[0].strip()
+           
+            if yomi == "" and (raw=="っ" or raw=="ッ"):
+                kana+="ッ"
+            else:
+                kana+=yomi
         else:
             kana+=data[0].split("\t")[0] #unidic index 0 has tab-separated 
             
