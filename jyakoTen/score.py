@@ -19,17 +19,21 @@ def replace_chars(line):
 def detect_success_fail_words(word1,word2):
     d = difflib.Differ()
     diff = d.compare(word1, word2)
-    success = []
-    faild = []
+    
+    result = []
+    #faild = []
     for line in diff:
+        #print(line)
         split = line.split(" ")
         if  split[0] == "":
-            success.append(split[2])
+            result.append(split[2])# it's ok double spaced
         else:
             if split[0] == "+":
-                faild.append(split[1])
+                result.append("+"+split[1])
+            elif split[0] == "-":
+                result.append("-"+split[1])
         #print(f"result = '{line}'")
-    return " ".join(success)," ".join(faild)
+    return " ".join(result)
 
 
 # arg parser
@@ -37,8 +41,15 @@ def score_main():
      parser = argparse.ArgumentParser(description='Score result')
      parser.add_argument('--transcript_path',"-tp" ,
                          help='correct text path')
+     parser.add_argument('--transcript_kanji_index', "-tki",
+                         help='kanji',default=0,type=int)
      parser.add_argument('--transcript_index', "-ti",
                          help='1 for kana',default=1,type=int)
+     parser.add_argument('--transcript_convert_kana',"-tc", 
+                         help='convert to kana',action='store_true')
+     parser.add_argument('--transcript_use_key',"-tk", 
+                         help='use transcript 0 value instead number',action='store_true')
+    
      # TODO support
      #parser.add_argument('--use_transcript_kanji', help='is transcript are kanji',action='store_true')
      
@@ -54,7 +65,8 @@ def score_main():
                          help='0 means flat',default=0,type=int)
      parser.add_argument('--recognition_splitter',"-rs" ,
                          help='split text',default="|")
-
+     
+     
      parser.add_argument('--key_dir', 
                          help='file exist dir')
      
@@ -83,6 +95,7 @@ def score_main():
 
      transcript_path = args.transcript_path
      transcript_index = args.transcript_index
+     transcript_kanji_index = args.transcript_kanji_index
      transcript_splitter = args.transcript_splitter
 
      recognition_path = args.recognition_path
@@ -118,7 +131,10 @@ def score_main():
           emotion_path = transcript_path
 
      #transcript_kanjis = [] # TODO support kanji?
-     emotion_kanas = []
+     transcript_kanas = []
+     transcript_keys = []
+     transcript_kanjis = []
+
      with open(emotion_path) as f:
           lines = f.readlines()
           for line in lines:
@@ -127,9 +143,16 @@ def score_main():
                     continue
                id,kanji_kana = line.split(transcript_splitter)
                kanji_kana = kanji_kana.split(",")
+               kanji = kanji_kana[transcript_kanji_index]
+               kanji = replace_chars(kanji)
+               transcript_kanjis.append(kanji)
+               
                kana = kanji_kana[transcript_index]
                kana = replace_chars(kana)
-               emotion_kanas.append(kana)
+               if transcript_kanji_index == transcript_index:#TODO support kana only?
+                    kana = pyopenjtalk.g2p(kana, kana=True)
+               transcript_kanas.append(kana)
+               transcript_keys.append(id)
                #transcript_kanjis.append()
 
 
@@ -155,14 +178,16 @@ def score_main():
 
      index = 0
      out = []
-     out.append(",".join(["index","cer","jyakoten01","transcript_text","detected_text","detected_kana","transcript_phonome","detected_phonome","success_phonome","faild_phonome"])+"\n")
+     out.append(",".join(["index","kanji_cer","kana_cer","jyakoten01","transcript_kanji","transcript_kana","detected_kanji","detected_kana","best_kana","transcript_mora","detected_mora","diff_mora"])+"\n")
      lows = []
      total_score = 0
      low_text = ""
      low_score = 1
      case2 = 0
      case3 = 0
-     total_cer =0
+     total_kanji_cer =0
+     total_kana_cer =0
+     total_mer =0
 
      with open(file_path) as f:
           lines = f.readlines()
@@ -195,14 +220,24 @@ def score_main():
                
                
                
+               if args.transcript_use_key:
+                    index_text = transcript_keys[index]
+               else:
+                    index_text = f"{index+1:03d}"
 
-               kana = emotion_kanas[index]
+
+               kanji = transcript_kanjis[index]
+               kana = transcript_kanas[index]
                phones2 = pyopenjtalk.g2p(kana, kana=False)
                moras2 = mora_utils.phonemes_to_mora(phones2,True)
 
                detect_kana = pyopenjtalk.g2p(line, kana=True)
-               cer = mecab_utils.get_cer(kana,detect_kana)
-               total_cer += cer
+               
+               kanji_cer = mecab_utils.get_cer(kanji,line)
+               kana_cer = mecab_utils.get_cer(kana,detect_kana)
+
+               total_kanji_cer += kanji_cer
+               total_kana_cer += kana_cer
                
                high_score,high_score_text,high_moras = mecab_utils.get_best_group(line,kana,True,True,args.use_mora)
                high_score2,high_score_text2,high_moras2 = mecab_utils.get_best_group(line,kana,False,True,args.use_mora)
@@ -231,19 +266,22 @@ def score_main():
                     low_correct = kana
                     low_id = index
 
-               sucdess, faild = detect_success_fail_words(high_moras, moras2)
+               #print(high_moras,moras2)
+               success = detect_success_fail_words(high_moras, moras2)
                
                # convert readable text
                moras1 = " ".join(high_moras)
                moras2 = " ".join(moras2)
 
-               result = f"{index+1:03d},{cer:.3f},{score:.3f},{kana},{line},{high_score_text},{moras2},{moras1},{sucdess},{faild}\n"
+               result = f"{index_text},{kanji_cer:.3f},{kana_cer:.3f},{(1.0-score):.3f},{kanji},{kana},{line},{detect_kana},{high_score_text},{moras2},{moras1},{success}\n"
                out.append(result)
                if score < min_score:
                     lows.append(result)
                total_score += score
-               
+               total_mer += (1.0-score)
                index += 1
+               break
+               
                
      max_score = index
      print(f"{key1} {key2} Total:{total_score}")
@@ -260,8 +298,11 @@ def score_main():
      if args.use_mora:
           option_key +="_use-mora"
 
-     average_cer=total_cer/(index+1)
-     output_file_name = f"{key1}_{key2}_{key3}_cer-{average_cer:.3f}_score({score:.3f} of {max_score}){option_key}.txt"
+     average_kanji_cer=total_kanji_cer/(index) #I'M not sure why add +1
+     average_kana_cer=total_kana_cer/(index)
+     average_mer =total_mer/(index)
+     #print(total_mer,average_mer)
+     output_file_name = f"{key1}_{key2}_{key3}_total-{max_score}_cer-kanji-{average_kanji_cer:.3f}_kana-{average_kana_cer:.3f}_mer-{average_mer:.3f}{option_key}.txt"
      output_path = os.path.join(os.getcwd(),output_file_name) 
 
      with open(output_path, 'w') as f:

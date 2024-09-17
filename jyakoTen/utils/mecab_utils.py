@@ -121,8 +121,10 @@ def get_best_text(header,text,correct,use_mecab=True,convert_mora=True):
 
     for kana in kanas:
         phones1 = pyopenjtalk.g2p(header+kana, kana=False)
-        moras1 = mora_utils.phonemes_to_mora(phones1,True,convert_mora)
+        
 
+        moras1 = mora_utils.phonemes_to_mora(phones1,True,convert_mora)
+        
         #print(header+kana,phones1)
        
         #oh my slow
@@ -140,6 +142,11 @@ def get_best_text(header,text,correct,use_mecab=True,convert_mora=True):
             high_moras = moras1
         #print(f"{current_score} {kana} {moras1},{moras2}")
         #print(f"{current_score} {kana}")
+
+    if not convert_mora:
+        re_text = " ".join(high_moras)
+        high_moras = mora_utils.phonemes_to_mora(re_text,False,True)
+    
     return [high_score,high_text,high_moras]
 
 
@@ -155,7 +162,7 @@ def get_best_group(result,correct,use_mecab=True,split_group=True,convert_mora=F
     
 
     result = ""
-    for group in groups:
+    for group in groups:#
         #print(result+group)
         score,text,moras1 = get_best_text(result,group,correct,use_mecab,convert_mora)
         #print(f"{score} = {text}")
