@@ -36,6 +36,8 @@ def detect_success_fail_words(word1,word2):
     return " ".join(result)
 
 
+ 
+
 # arg parser
 def score_main():
      parser = argparse.ArgumentParser(description='Score result')
@@ -178,7 +180,7 @@ def score_main():
 
      index = 0
      out = []
-     out.append(",".join(["index","kanji_cer","kana_cer","jyakoten01","transcript_kanji","transcript_kana","detected_kanji","detected_kana","best_kana","transcript_mora","detected_mora","diff_mora"])+"\n")
+     out.append(",".join(["index","kanji_cer","kana_cer","mora_er","phonome_er","transcript_kanji","transcript_kana","detected_kanji","detected_kana","best_kana","transcript_mora","detected_mora","diff_mora"])+"\n")
      lows = []
      total_score = 0
      low_text = ""
@@ -188,6 +190,7 @@ def score_main():
      total_kanji_cer =0
      total_kana_cer =0
      total_mer =0
+     total_per =0
 
      with open(file_path) as f:
           lines = f.readlines()
@@ -268,19 +271,22 @@ def score_main():
 
                #print(high_moras,moras2)
                success = detect_success_fail_words(high_moras, moras2)
+               mora_error_rate,phonome_error_rate = mecab_utils.get_mora_phonome_error_rate(moras2,high_moras)
                
                # convert readable text
                moras1 = " ".join(high_moras)
                moras2 = " ".join(moras2)
 
-               result = f"{index_text},{kanji_cer:.3f},{kana_cer:.3f},{(1.0-score):.3f},{kanji},{kana},{line},{detect_kana},{high_score_text},{moras2},{moras1},{success}\n"
+               result = f"{index_text},{kanji_cer:.3f},{kana_cer:.3f},{(mora_error_rate):.3f},{phonome_error_rate:.3f},{kanji},{kana},{line},{detect_kana},{high_score_text},{moras2},{moras1},{success}\n"
                out.append(result)
                if score < min_score:
                     lows.append(result)
                total_score += score
-               total_mer += (1.0-score)
+               total_mer += mora_error_rate
+               total_per += phonome_error_rate
                index += 1
-               break
+               
+               
                
                
      max_score = index
@@ -301,8 +307,9 @@ def score_main():
      average_kanji_cer=total_kanji_cer/(index) #I'M not sure why add +1
      average_kana_cer=total_kana_cer/(index)
      average_mer =total_mer/(index)
+     average_per =total_per/(index)
      #print(total_mer,average_mer)
-     output_file_name = f"{key1}_{key2}_{key3}_total-{max_score}_cer-kanji-{average_kanji_cer:.3f}_kana-{average_kana_cer:.3f}_mer-{average_mer:.3f}{option_key}.txt"
+     output_file_name = f"{key1}_{key2}_{key3}_total-{max_score}_cer-kanji-{average_kanji_cer:.3f}_kana-{average_kana_cer:.3f}_mer-{average_mer:.3f}_per-{average_per:.3f}{option_key}.txt"
      output_path = os.path.join(os.getcwd(),output_file_name) 
 
      with open(output_path, 'w') as f:
