@@ -30,12 +30,13 @@ ja005_2799_recitation_total-324_cer-kanji-0.160_kana-0.065_mer-0.019_per-0.016_s
 
 - ja005 - modelの名前
 - 2799 - checkpointのepoch
-- recitation - 出力したtranscript
+- recitation - 出力したtranscript名
 - total-324 - 324行ありました
 - cer-kanji - 漢字のCER
 - kana-cer - カナに変換してのCER
-- mer -Mora-Error-Rate (モーラーと呼ばれるカナに近い形式・Ka,Ki,Ku,Ke,Ko)
+- mer - Mora-Error-Rate (モーラーと呼ばれるカナに近い形式・Ka,Ki,Ku,Ke,Ko)
 - per - Phonome-Error-Rate (母音と子音単位・K a K i K u K e K o)
+- pk_single - singleだと単独話者モデル・マルチスピーカーだと話者番号
 
 中身
 
@@ -52,6 +53,7 @@ index,kanji_cer,kana_cer,mora_er,phonome_er,transcript_kanji,transcript_kana,det
 - カナとモーラ - カナの表記の違いはある程度、モーラで同じになります。
 - PER - 大抵子音と母音のどちらか片方が違うことが多いので、MERに比べてPERは低くなります。逆に大差ない場合、文字が増えてることが多い
 - PERはボーダーラインとして使える - 多少 PERあっても、曖昧母音・子音がぶれただけのことが多いので、ラベルの正確さには大差さはない
+- diff_mora - 分析に役立つかもしれない
 
 ## 計算方法
 Matcha-TTS-Japaneseのモデルの性能評価は、ITA-Recitaionというコーパスの324文をTTS出力して、それをWhisperで読み込み、どこまで正しく認識できるかで評価しています。
@@ -88,6 +90,6 @@ ryo ko u shi te
 
 上記を以下に変換。変換した文字をCER
 
-Ao Bo o Ci Da
-Ao Bo u Ci De
+Ao Bo oo Ci Da
+Ao Bo uu Ci De
 ```
