@@ -2,7 +2,11 @@
 ## History
 0.2 Totally format Changed(But not release yet)
 ## how to install
-pip install jyakoTen
+```
+git clone https://github.com/akjava/jyakoTen
+cd jyakoTen
+pip install .
+```
 
 ## What is this
 JyakoTen is Japanese Text recognized by Whisper or FasterWhisper
