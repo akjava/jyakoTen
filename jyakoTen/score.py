@@ -221,6 +221,8 @@ def score_main():
                     line= line.replace("7-20","セブントゥウェンティ")
                     line= line.replace("360","スリーシックスティ")
                
+              
+
                
                
                if args.transcript_use_key:
@@ -268,6 +270,9 @@ def score_main():
                     low_text = line+"/"+high_score_text
                     low_correct = kana
                     low_id = index
+
+               if score == 0:
+                    detect_kana
 
                #print(high_moras,moras2)
                success = detect_success_fail_words(high_moras, moras2)
