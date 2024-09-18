@@ -2,6 +2,8 @@
 ## History
 0.2 Totally format Changed(But not release yet)
 ## how to install
+pipのは古い。更新が多くてUpdateできない
+
 ```
 git clone https://github.com/akjava/jyakoTen
 cd jyakoTen
