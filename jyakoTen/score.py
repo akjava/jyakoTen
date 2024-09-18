@@ -271,8 +271,9 @@ def score_main():
                     low_correct = kana
                     low_id = index
 
-               if score == 0:
-                    detect_kana
+               if score == 0: #sometime get_best_group return empty
+                    high_score_text = detect_kana # overwrited
+                    high_moras = mora_utils.phonemes_to_mora(detect_kana)
 
                #print(high_moras,moras2)
                success = detect_success_fail_words(high_moras, moras2)

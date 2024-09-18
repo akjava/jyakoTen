@@ -148,7 +148,7 @@ def get_mora_phonome_error_rate(phonome1, phonome2,joiner=" "):
 
 def get_cer(transcript, detect):
     if detect == "":
-        return 0
+        return 1.0
     d = edit_distance(transcript, detect)
     cer = float(d) / max(len(transcript), len(detect))  
     return cer
