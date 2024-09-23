@@ -85,6 +85,8 @@ def score_main():
                          help='not use mecab',action='store_false')
      parser.add_argument('--use_mora', 
                          help='calcurate mora base',action='store_true')
+     parser.add_argument('--sort_per',"-sp", 
+                         help='calcurate mora base',action='store_true')
 
 
 
@@ -137,6 +139,8 @@ def score_main():
      transcript_keys = []
      transcript_kanjis = []
 
+     transcript_map={}
+
      with open(emotion_path) as f:
           lines = f.readlines()
           for line in lines:
@@ -155,6 +159,7 @@ def score_main():
                     kana = pyopenjtalk.g2p(kana, kana=True)
                transcript_kanas.append(kana)
                transcript_keys.append(id)
+               transcript_map[id]={"kana":kana,"kanji":kanji}
                #transcript_kanjis.append()
 
 
@@ -191,14 +196,26 @@ def score_main():
      total_kana_cer =0
      total_mer =0
      total_per =0
-
+     skipped = 0
      with open(file_path) as f:
           lines = f.readlines()
           for line in lines:
-               
+               if index>=len(transcript_keys):
+                    print("index over transcript sized.maybe invalid data contain or removed.")
+                    break
+
+               if index%100 == 0:
+                    print(f"progressed {index}")
+
+               line = line.strip()
                values = line.split(recognition_splitter)
                line = values[recognition_index]
                line = replace_chars(line)
+               if line == "ご視聴ありがとうございました" and args.transcript_use_key:#numbers need key
+                    print("skip ご視聴ありがとうございました")
+                    skipped += 1
+                    index += 1
+                    continue
                
                converted_dic=alkana_utils.convert_alphabet_to_kana(line)
                
@@ -273,7 +290,8 @@ def score_main():
 
                if score == 0: #sometime get_best_group return empty
                     high_score_text = detect_kana # overwrited
-                    high_moras = mora_utils.phonemes_to_mora(detect_kana)
+                    detect_kana_phonome = pyopenjtalk.g2p(detect_kana, kana=False)
+                    high_moras = mora_utils.phonemes_to_mora(detect_kana_phonome)
 
                #print(high_moras,moras2)
                success = detect_success_fail_words(high_moras, moras2)
@@ -291,13 +309,13 @@ def score_main():
                total_mer += mora_error_rate
                total_per += phonome_error_rate
                index += 1
-               
+               #if index>20:#debug
+               #     break
                
                
                
      max_score = index
-     print(f"{key1} {key2} Total:{total_score}")
-     print(f"Lowest:{low_id} {low_score}:{low_text} = {low_correct}")
+     
      # TODO add verbose mode
      #print(f"no mecab:{case2},no group:{case3}")
      score = total_score
@@ -314,9 +332,18 @@ def score_main():
      average_kana_cer=total_kana_cer/(index)
      average_mer =total_mer/(index)
      average_per =total_per/(index)
+     
+     print(f"{key1} {key2} MER:{average_mer}")
+     print(f"Lowest:id={low_id} max-error={(1.0-low_score):.3f}:detect={low_text} correct={low_correct}")
+
      #print(total_mer,average_mer)
-     output_file_name = f"{key1}_{key2}_{key3}_total-{max_score}_cer-kanji-{average_kanji_cer:.3f}_kana-{average_kana_cer:.3f}_mer-{average_mer:.3f}_per-{average_per:.3f}{option_key}.txt"
+     output_file_name = f"{key1}_{key2}_{key3}_total-{max_score}-skipped-{skipped:02d}_cer-kanji-{average_kanji_cer:.5f}_kana-{average_kana_cer:.5f}_mer-{average_mer:.5f}_per-{average_per:.5f}{option_key}.txt"
      output_path = os.path.join(os.getcwd(),output_file_name) 
 
+     if args.sort_per:
+          sorted_out =sorted(out[1:],key=lambda x: float(x.split(',')[4].strip()), reverse=True)
+          sorted_out.insert(0, out[0])
+          out = sorted_out
+     
      with open(output_path, 'w') as f:
           f.writelines(out)
